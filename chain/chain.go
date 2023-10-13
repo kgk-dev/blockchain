@@ -4,26 +4,30 @@ import (
 	"time"
 
 	"github.com/kgk-dev/blockchain/block"
-	"github.com/kgk-dev/blockchain/utlis"
 )
 
 type BlockChain struct {
-	length int
-	Chain  []*block.Block
+	length     int
+	difficulty int
+	Chain      []*block.Block
 }
 
-func (bc *BlockChain) GenesisBlock() *block.Block {
-	if genesisBlock, err := utlis.CreateBlock(time.Now().String(), "Genesis Block", "0"); err == nil {
-		return genesisBlock
+func Create(difficulty int) *BlockChain {
+	blockchain := &BlockChain{}
+	blockchain.GenesisBlock()
+	blockchain.difficulty = difficulty
+	return blockchain
+}
+
+func (bc *BlockChain) GenesisBlock() {
+	genesisBlock := &block.Block{
+		TimeStamp:    time.Now().String(),
+		Data:         "Genesis Block",
+		PreviousHash: "0",
 	}
-	return nil
-}
-
-func Create() *BlockChain {
-	bc := &BlockChain{}
-	bc.Chain = append(bc.Chain, bc.GenesisBlock())
+	genesisBlock.Hash = genesisBlock.CalculateHash()
+	bc.Chain = append(bc.Chain, genesisBlock)
 	bc.length++
-	return bc
 }
 
 func (bc *BlockChain) FirstBlock() *block.Block {
@@ -39,11 +43,12 @@ func (bc *BlockChain) LatestBlock() *block.Block {
 }
 
 func (bc *BlockChain) AddBlock(data string) *BlockChain {
-	block, err := utlis.CreateBlock(
+	block := block.CreateBlock(
 		time.Now().String(),
 		data,
 		bc.LatestBlock().Hash)
-	if err == nil {
+	ok := block.MineBlock(bc.difficulty)
+	if ok {
 		bc.Chain = append(bc.Chain, block)
 		bc.length++
 		return bc
@@ -55,12 +60,9 @@ func (bc *BlockChain) IsChainValid() bool {
 	for index := 1; index < bc.length; index += 1 {
 		currentBlock := bc.Chain[index]
 		previousBlock := bc.Chain[index-1]
-		if hash, err := utlis.CalculateHash(
-			currentBlock.TimeStamp, currentBlock.Data, currentBlock.PreviousHash,
-		); err == nil && hash != currentBlock.Hash {
-			return false
-		}
-		if currentBlock.PreviousHash != previousBlock.Hash {
+		hash := currentBlock.CalculateHash()
+		if hash != currentBlock.Hash ||
+			currentBlock.PreviousHash != previousBlock.Hash {
 			return false
 		}
 	}

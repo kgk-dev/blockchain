@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	BlockChain := chain.Create()
+	BlockChain := chain.Create(3)
 	BlockChain.AddBlock("I'm programmer")
 	BlockChain.AddBlock("I'm blockchain developer")
 	BlockChain.AddBlock("I'm software engineer")
