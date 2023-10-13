@@ -22,7 +22,7 @@ func Create(difficulty int) *BlockChain {
 func (bc *BlockChain) GenesisBlock() {
 	genesisBlock := &block.Block{
 		TimeStamp:    time.Now().String(),
-		Data:         "Genesis Block",
+		Transaction:  *block.NewTransaction("", "", 0),
 		PreviousHash: "0",
 	}
 	genesisBlock.Hash = genesisBlock.CalculateHash()
@@ -42,10 +42,10 @@ func (bc *BlockChain) LatestBlock() *block.Block {
 	return bc.Chain[chainLength-1]
 }
 
-func (bc *BlockChain) AddBlock(data string) *BlockChain {
+func (bc *BlockChain) AddBlock(transaction block.Transaction) *BlockChain {
 	block := block.CreateBlock(
 		time.Now().String(),
-		data,
+		transaction,
 		bc.LatestBlock().Hash)
 	ok := block.MineBlock(bc.difficulty)
 	if ok {
