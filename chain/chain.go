@@ -6,60 +6,28 @@ import (
 	"github.com/kgk-dev/blockchain/block"
 )
 
-type BlockChain struct {
-	length     int
-	difficulty int
-	Chain      []*block.Block
+type Chain struct {
+	Blocks []*block.Block
+	Length int
 }
 
-func Create(difficulty int) *BlockChain {
-	blockchain := &BlockChain{}
-	blockchain.GenesisBlock()
-	blockchain.difficulty = difficulty
-	return blockchain
+func (c *Chain) AddBlock(block *block.Block) {
+	c.Blocks = append(c.Blocks, block)
+	c.Length++
 }
 
-func (bc *BlockChain) GenesisBlock() {
-	genesisBlock := &block.Block{
-		TimeStamp:    time.Now().String(),
-		Transaction:  *block.NewTransaction("", "", 0),
-		PreviousHash: "0",
-	}
-	genesisBlock.Hash = genesisBlock.CalculateHash()
-	bc.Chain = append(bc.Chain, genesisBlock)
-	bc.length++
+func (c *Chain) FirstBlock() *block.Block {
+	return c.Blocks[0]
 }
 
-func (bc *BlockChain) FirstBlock() *block.Block {
-	return bc.Chain[0]
+func (c *Chain) EndBlock() *block.Block {
+	return c.Blocks[c.Length-1]
 }
 
-func (bc *BlockChain) LatestBlock() *block.Block {
-	chainLength := len(bc.Chain)
-	if chainLength == 1 {
-		return bc.FirstBlock()
-	}
-	return bc.Chain[chainLength-1]
-}
-
-func (bc *BlockChain) AddBlock(transaction block.Transaction) *BlockChain {
-	block := block.CreateBlock(
-		time.Now().String(),
-		transaction,
-		bc.LatestBlock().Hash)
-	ok := block.MineBlock(bc.difficulty)
-	if ok {
-		bc.Chain = append(bc.Chain, block)
-		bc.length++
-		return bc
-	}
-	return bc
-}
-
-func (bc *BlockChain) IsChainValid() bool {
-	for index := 1; index < bc.length; index += 1 {
-		currentBlock := bc.Chain[index]
-		previousBlock := bc.Chain[index-1]
+func (c *Chain) IsValidChain() bool {
+	for firstBlockIndex := 1; firstBlockIndex < c.Length; firstBlockIndex += 1 {
+		currentBlock := c.Blocks[firstBlockIndex]
+		previousBlock := c.Blocks[firstBlockIndex-1]
 		hash := currentBlock.CalculateHash()
 		if hash != currentBlock.Hash ||
 			currentBlock.PreviousHash != previousBlock.Hash {
@@ -67,4 +35,17 @@ func (bc *BlockChain) IsChainValid() bool {
 		}
 	}
 	return true
+}
+
+func (c *Chain) GenesisBlock() *block.Block {
+	newBlock := &block.Block{
+		TimeStamp:    time.Now(),
+		PreviousHash: "000000",
+	}
+	newBlock.Hash = newBlock.CalculateHash()
+	return newBlock
+}
+
+func Create() *Chain {
+	return &Chain{}
 }
